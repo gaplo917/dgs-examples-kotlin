@@ -44,7 +44,7 @@ class ExampleTracingInstrumentation: SimpleInstrumentation() {
 
     override fun beginExecution(parameters: InstrumentationExecutionParameters): InstrumentationContext<ExecutionResult> {
         val state: TraceState = parameters.getInstrumentationState()
-        state.traceStartTime = System.currentTimeMillis()
+        state.traceStartTime = System.nanoTime()
 
         return super.beginExecution(parameters)
     }
@@ -59,16 +59,16 @@ class ExampleTracingInstrumentation: SimpleInstrumentation() {
         val dataFetcherName = findDatafetcherTag(parameters)
 
         return DataFetcher { environment ->
-            val startTime = System.currentTimeMillis()
+            val startTime = System.nanoTime()
             val result = dataFetcher.get(environment)
             if(result is CompletableFuture<*>) {
                 result.whenComplete { _,_ ->
-                    val totalTime = System.currentTimeMillis() - startTime
-                    logger.info("Async datafetcher '$dataFetcherName' took ${totalTime}ms")
+                    val totalTime = (System.nanoTime() - startTime) / 1000000.0
+                    logger.info("Async datafetcher '{}' took {}ms", dataFetcherName, totalTime)
                 }
             } else {
-                val totalTime = System.currentTimeMillis() - startTime
-                logger.info("Datafetcher '$dataFetcherName': ${totalTime}ms")
+                val totalTime = (System.nanoTime() - startTime) / 1000000.0
+                logger.info("Datafetcher '{}': {}ms", dataFetcherName, totalTime)
             }
 
             result
@@ -77,8 +77,8 @@ class ExampleTracingInstrumentation: SimpleInstrumentation() {
 
     override fun instrumentExecutionResult(executionResult: ExecutionResult, parameters: InstrumentationExecutionParameters): CompletableFuture<ExecutionResult> {
         val state: TraceState = parameters.getInstrumentationState()
-        val totalTime = System.currentTimeMillis() - state.traceStartTime
-        logger.info("Total execution time: ${totalTime}ms")
+        val totalTime = (System.nanoTime() - state.traceStartTime) / 1000000.0
+        logger.info("Total execution time: {}ms", totalTime)
 
         return super.instrumentExecutionResult(executionResult, parameters)
     }
