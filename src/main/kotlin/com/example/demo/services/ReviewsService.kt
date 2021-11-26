@@ -19,6 +19,7 @@ package com.example.demo.services
 import com.example.demo.generated.types.Review
 import com.example.demo.generated.types.SubmittedReview
 import com.github.javafaker.Faker
+import kotlinx.coroutines.runBlocking
 import org.reactivestreams.Publisher
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -34,10 +35,10 @@ import javax.annotation.PostConstruct
 import kotlin.streams.toList
 
 interface ReviewsService {
-    fun reviewsForShow(showId: Int): List<Review>?
-    fun reviewsForShows(showIds: List<Int>): Map<Int, List<Review>>
-    fun saveReview(reviewInput: SubmittedReview)
-    fun getReviewsPublisher(): Publisher<Review>
+    suspend fun reviewsForShow(showId: Int): List<Review>?
+    suspend fun reviewsForShows(showIds: List<Int>): Map<Int, List<Review>>
+    suspend fun saveReview(reviewInput: SubmittedReview)
+    suspend fun getReviewsPublisher(): Publisher<Review>
 }
 
 /**
@@ -58,7 +59,7 @@ class DefaultReviewsService(private val showsService: ShowsService): ReviewsServ
         val faker = Faker()
 
         //For each show we generate a random set of reviews.
-        showsService.shows().forEach { show ->
+        runBlocking { showsService.shows() }.forEach { show ->
             val generatedReviews = IntStream.range(0, faker.number().numberBetween(1, 20)).mapToObj {
                 val date =
                     faker.date().past(300, TimeUnit.DAYS).toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime()
@@ -86,7 +87,7 @@ class DefaultReviewsService(private val showsService: ShowsService): ReviewsServ
     /**
      * Hopefully nobody calls this for multiple shows within a single query, that would indicate the N+1 problem!
      */
-    override fun reviewsForShow(showId: Int): List<Review>? {
+    override suspend fun reviewsForShow(showId: Int): List<Review>? {
         return reviews[showId]
     }
 
@@ -94,14 +95,14 @@ class DefaultReviewsService(private val showsService: ShowsService): ReviewsServ
      * This is the method we want to call when loading reviews for multiple shows.
      * If this code was backed by a relational database, it would select reviews for all requested shows in a single SQL query.
      */
-    override fun reviewsForShows(showIds: List<Int>): Map<Int, List<Review>> {
+    override suspend fun reviewsForShows(showIds: List<Int>): Map<Int, List<Review>> {
         logger.info("Loading reviews for shows ${showIds.joinToString()}")
 
         return reviews.filter { showIds.contains(it.key) }
     }
 
-    override fun saveReview(reviewInput: SubmittedReview) {
-        val reviewsForMovie = reviews.getOrPut(reviewInput.showId, { mutableListOf() })
+    override suspend fun saveReview(reviewInput: SubmittedReview) {
+        val reviewsForMovie = reviews.getOrPut(reviewInput.showId) { mutableListOf() }
         val review = Review(
             username = reviewInput.username,
             starScore = reviewInput.starScore,
@@ -113,7 +114,7 @@ class DefaultReviewsService(private val showsService: ShowsService): ReviewsServ
         logger.info("Review added {}", review)
     }
 
-    override fun getReviewsPublisher(): Publisher<Review> {
+    override suspend fun getReviewsPublisher(): Publisher<Review> {
         return reviewsPublisher
     }
 }

@@ -32,7 +32,8 @@ import com.jayway.jsonpath.TypeRef
 import com.netflix.graphql.dgs.DgsQueryExecutor
 import com.netflix.graphql.dgs.autoconfig.DgsAutoConfiguration
 import com.netflix.graphql.dgs.client.codegen.GraphQLQueryRequest
-import graphql.ExecutionResult
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -43,6 +44,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import java.time.OffsetDateTime
 
+@ExperimentalCoroutinesApi
 @SpringBootTest(classes = [ShowsDataFetcher::class, ReviewsDataFetcher::class, ReviewsDataLoader::class, DgsAutoConfiguration::class, DateTimeScalarRegistration::class])
 class ShowsDataFetcherTest {
 
@@ -56,7 +58,7 @@ class ShowsDataFetcherTest {
     lateinit var reviewsService: ReviewsService
 
     @BeforeEach
-    fun before() {
+    fun before() = runTest {
         `when`(showsService.shows()).thenAnswer { listOf(Show(id = 1, title = "mock title", releaseYear = 2020)) }
         `when`(reviewsService.reviewsForShows(listOf(1))).thenAnswer {
             mapOf(
@@ -87,8 +89,10 @@ class ShowsDataFetcherTest {
     }
 
     @Test
-    fun showsWithException() {
-        `when`(showsService.shows()).thenThrow(RuntimeException("nothing to see here"))
+    fun showsWithException() = runTest {
+        // kotlin coroutine and mockito thenThrow might have unexpected issue
+        // https://github.com/mockito/mockito/issues/1166
+        `when`(showsService.shows()).thenAnswer { throw RuntimeException("nothing to see here") }
 
         val result = dgsQueryExecutor.execute(
             """
@@ -102,6 +106,7 @@ class ShowsDataFetcherTest {
         )
 
         assertThat(result.errors).isNotEmpty
+        // if you see this test fail, probably caused by this bug: https://github.com/Netflix/dgs-framework/issues/753
         assertThat(result.errors[0].message).isEqualTo("java.lang.RuntimeException: nothing to see here")
     }
 
@@ -141,7 +146,7 @@ class ShowsDataFetcherTest {
     }
 
     @Test
-    fun addReviewMutation() {
+    fun addReviewMutation() = runTest {
 
         val graphQLQueryRequest =
             GraphQLQueryRequest(

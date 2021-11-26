@@ -29,6 +29,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.CompletionStage
 
 /**
  * Example Instrumentation class that prints the time each datafetcher takes.
@@ -61,7 +62,7 @@ class ExampleTracingInstrumentation: SimpleInstrumentation() {
         return DataFetcher { environment ->
             val startTime = System.nanoTime()
             val result = dataFetcher.get(environment)
-            if(result is CompletableFuture<*>) {
+            if(result is CompletionStage<*>) {
                 result.whenComplete { _,_ ->
                     val totalTime = (System.nanoTime() - startTime) / 1000000.0
                     logger.info("Async datafetcher '{}' took {}ms", dataFetcherName, totalTime)

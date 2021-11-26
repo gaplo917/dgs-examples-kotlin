@@ -20,7 +20,7 @@ import com.example.demo.generated.types.Show
 import org.springframework.stereotype.Service
 
 interface ShowsService {
-    fun shows(): List<Show>
+    suspend fun shows(): List<Show>
 }
 
 /**
@@ -29,7 +29,7 @@ interface ShowsService {
  */
 @Service
 class BasicShowsService : ShowsService {
-    override fun shows(): List<Show> {
+    override suspend fun shows(): List<Show> {
         return listOf(
             Show(id = 1, title = "Stranger Things", releaseYear = 2016),
             Show(id = 2, title = "Ozark", releaseYear = 2017),

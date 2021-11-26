@@ -23,9 +23,9 @@ import com.example.demo.generated.types.Show
 import com.example.demo.generated.types.SubmittedReview
 import com.example.demo.services.ReviewsService
 import com.netflix.graphql.dgs.*
+import kotlinx.coroutines.future.await
 import org.dataloader.DataLoader
 import org.reactivestreams.Publisher
-import java.util.concurrent.CompletableFuture
 
 @DgsComponent
 class ReviewsDataFetcher(private val reviewsService: ReviewsService) {
@@ -38,7 +38,7 @@ class ReviewsDataFetcher(private val reviewsService: ReviewsService) {
      * For this to work correctly, the datafetcher needs to return a CompletableFuture.
      */
     @DgsData(parentType = DgsConstants.SHOW.TYPE_NAME, field = DgsConstants.SHOW.Reviews)
-    fun reviews(dfe: DgsDataFetchingEnvironment): CompletableFuture<List<Review>> {
+    suspend fun reviews(dfe: DgsDataFetchingEnvironment): List<Review> {
         //Instead of loading a DataLoader by name, we can use the DgsDataFetchingEnvironment and pass in the DataLoader classname.
         val reviewsDataLoader: DataLoader<Int, List<Review>> = dfe.getDataLoader(ReviewsDataLoader::class.java)
 
@@ -46,18 +46,18 @@ class ReviewsDataFetcher(private val reviewsService: ReviewsService) {
         val show : Show = dfe.getSource()
 
         //Load the reviews from the DataLoader. This call is async and will be batched by the DataLoader mechanism.
-        return reviewsDataLoader.load(show.id)
+        return reviewsDataLoader.load(show.id).await()
     }
 
     @DgsMutation
-    fun addReview(@InputArgument review: SubmittedReview): List<Review> {
+    suspend fun addReview(@InputArgument review: SubmittedReview): List<Review> {
         reviewsService.saveReview(review)
 
         return reviewsService.reviewsForShow(review.showId)?: emptyList()
     }
 
     @DgsSubscription
-    fun reviewAdded(@InputArgument showId: Int): Publisher<Review> {
+    suspend fun reviewAdded(@InputArgument showId: Int): Publisher<Review> {
         return reviewsService.getReviewsPublisher()
     }
 }

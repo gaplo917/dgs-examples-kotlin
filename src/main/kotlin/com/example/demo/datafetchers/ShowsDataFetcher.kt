@@ -29,7 +29,7 @@ class ShowsDataFetcher(private val showsService: ShowsService) {
      * It uses an @InputArgument to get the titleFilter from the Query if one is defined.
      */
     @DgsQuery
-    fun shows(@InputArgument titleFilter : String?): List<Show> {
+    suspend fun shows(@InputArgument titleFilter : String?): List<Show> {
         return if(titleFilter != null) {
             showsService.shows().filter { it.title.contains(titleFilter) }
         } else {

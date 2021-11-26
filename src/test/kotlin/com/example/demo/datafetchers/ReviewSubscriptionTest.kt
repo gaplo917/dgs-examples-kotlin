@@ -19,6 +19,7 @@ package com.example.demo.datafetchers
 import com.example.demo.generated.client.AddReviewGraphQLQuery
 import com.example.demo.generated.client.AddReviewProjectionRoot
 import com.example.demo.generated.types.Review
+import com.example.demo.generated.types.Show
 import com.example.demo.generated.types.SubmittedReview
 import com.example.demo.scalars.DateTimeScalarRegistration
 import com.example.demo.services.DefaultReviewsService
@@ -28,15 +29,37 @@ import com.netflix.graphql.dgs.DgsQueryExecutor
 import com.netflix.graphql.dgs.autoconfig.DgsAutoConfiguration
 import com.netflix.graphql.dgs.client.codegen.GraphQLQueryRequest
 import graphql.ExecutionResult
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
+import org.mockito.Mockito.`when`
+import org.mockito.Mockito.mock
 import org.reactivestreams.Publisher
 import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
 import java.util.concurrent.CopyOnWriteArrayList
+
+
+/**
+ * `@MockBean` is not working with suspend fun. Create a manual configuration for the ShowsService
+ */
+@Configuration
+class ShowsServiceMock {
+    @Bean
+    fun showsService(): ShowsService = runBlocking {
+        mock(ShowsService::class.java).also {
+            `when`(it.shows()).thenReturn(listOf(
+                Show(id = 1, title = "mock title", releaseYear = 2020),
+                Show(id = 2, title = "Ozark", releaseYear = 2017)
+            ))
+        }
+    }
+}
 
 /**
  * Test the review added subscription.
@@ -44,13 +67,11 @@ import java.util.concurrent.CopyOnWriteArrayList
  * Each time a review is added, a new ExecutionResult is given to subscriber.
  * Normally, this publisher is consumed by the Websocket/SSE subscription handler and you don't deal with this code directly, but for testing purposes it's useful to use the stream directly.
  */
-@SpringBootTest(classes = [DefaultReviewsService::class, ReviewsDataFetcher::class, DgsAutoConfiguration::class, DateTimeScalarRegistration::class])
+@ExperimentalCoroutinesApi
+@SpringBootTest(classes = [DefaultReviewsService::class, ReviewsDataFetcher::class, DgsAutoConfiguration::class, DateTimeScalarRegistration::class, ShowsServiceMock::class])
 class ReviewSubscriptionTest {
     @Autowired
     lateinit var dgsQueryExecutor: DgsQueryExecutor
-
-    @MockBean
-    lateinit var showsService: ShowsService
 
     @Test
     fun reviewSubscription() {
