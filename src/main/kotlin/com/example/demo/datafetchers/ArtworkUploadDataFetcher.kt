@@ -16,10 +16,8 @@
 
 package com.example.demo.datafetchers
 
-import com.example.demo.generated.DgsConstants
 import com.example.demo.generated.types.Image
 import com.netflix.graphql.dgs.DgsComponent
-import com.netflix.graphql.dgs.DgsData
 import com.netflix.graphql.dgs.DgsMutation
 import com.netflix.graphql.dgs.InputArgument
 import org.springframework.web.multipart.MultipartFile
