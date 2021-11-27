@@ -45,6 +45,7 @@ dependencies {
     implementation("com.github.javafaker:javafaker:1.+")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0-RC")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.6.0-RC")
+    implementation("com.auth0:java-jwt:3.18.2")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.0-RC")

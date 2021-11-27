@@ -1,3 +1,14 @@
+## GDG DevFest 2021 Demo
+
+```kotlin
+// contains { "scopes": ["ROLE_ADMIN"]  }
+const val adminJwtDemo = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJzY29wZXMiOlsiUk9MRV9BRE1JTiJdfQ.MVDYSnZHe6Mm4HKKXbNlSn3b0htTVoM_SoWhhlyIhLk"
+
+// contains { "scopes": ["ROLE_USER"] }
+const val userJwtDemo = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJzY29wZXMiOlsiUk9MRV9VU0VSIl19.0W06bIuK6ffTI3CiG0iIUHn2gnsgCaAfcfRuDEgcDFs"
+```
+
+
 Kotlin DGS Framework example
 =====
 

@@ -24,7 +24,7 @@ input TitleFormat {
 }
 
 type Review {
-    username: String
+    username: String @secured(requires: "ROLE_ADMIN")
     starScore: Int
     submittedDate: DateTime
 }
@@ -42,3 +42,4 @@ type Image {
 scalar DateTime
 scalar Upload
 directive @skipcodegen on FIELD_DEFINITION
+directive @secured(requires : String!) on FIELD_DEFINITION | OBJECT
